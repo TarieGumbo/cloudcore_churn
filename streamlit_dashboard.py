@@ -26,8 +26,8 @@ try:
     else: 
         df = pd.DataFrame(data)
          #show what columns exist 
-        st.write("Columns found:", df.columns.tolist())
-        st.write("Sample data:", df.head())
+        #st.write("Columns found:", df.columns.tolist())
+        #st.write("Sample data:", df.head())
 
         if "Churn Risk" in df.columns:
             col1, col2, col3 = st.columns(3)
