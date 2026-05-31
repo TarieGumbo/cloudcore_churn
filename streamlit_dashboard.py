@@ -11,7 +11,15 @@ if st.button("Refresh"):
     st.rerun()
 
 try: 
-    data = requests.get(API_URL).json()
+    response = requests.get(API_URL).json()
+    #force data to always be a list
+    if isinstance (response, dict):
+        data = [response] if response else []
+    elif isinstance (response, list):
+        data = response
+    else: 
+        data = []
+        
     # Handle both a list of records and a single dict
     if not data: 
         st.info("No scored customers yet. Waiting for Zapier to send data")
