@@ -11,6 +11,9 @@ if st.button("Refresh"):
     st.rerun()
 
 data = requests.get(API_URL).json()
+# Handle both a list of records and a single dict
+if isinstance(data, dict):
+    data = [data]
 df = pd.DataFrame(data)
 
 if df.empty:
