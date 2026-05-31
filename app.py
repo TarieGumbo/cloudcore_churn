@@ -44,6 +44,8 @@ def results():
     if not os.path.exists(OUTPUT_FILE):
         return jsonify([])
     df = pd.read_csv(OUTPUT_FILE)
+    if df.empty:
+        return jsonify([])
     return jsonify(df.to_dict(orient="records"))
 
 
