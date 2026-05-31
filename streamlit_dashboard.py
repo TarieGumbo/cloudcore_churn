@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import pandas as pd
 
 #API_URL = "https://cloudcore-churn.onrender.com"
 API_URL = st.secrets["API_URL"]
