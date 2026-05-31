@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-API_URL = "https://cloudcore-churn.onrender.com/results"
+API_URL = "https://cloudcore-churn.onrender.com"
 
 st.title("CloudCore — Customer Churn Risk")
 
