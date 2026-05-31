@@ -12,32 +12,32 @@ if st.button("Refresh"):
 
 try: 
     data = requests.get(API_URL).json()
-# Handle both a list of records and a single dict
-if not data: 
-    st.info("No scored customers yet. Waiting for Zapier to send data")
-else: 
-    df = pd.DataFrame(data)
-    #show what columns exist 
-    st.write("Columns found:", df.columns.tolist())
-    st.write("Sample data:", df.head())
+    # Handle both a list of records and a single dict
+    if not data: 
+        st.info("No scored customers yet. Waiting for Zapier to send data")
+    else: 
+        df = pd.DataFrame(data)
+         #show what columns exist 
+        st.write("Columns found:", df.columns.tolist())
+        st.write("Sample data:", df.head())
 
-if "Churn Risk" in df.columns:
-    col1, col2, col3 = st.columns(3)
-    col1.metric("High Risk", len(df[df["Churn Risk"] == "High"]))
-    col2.metric("Medium Risk", len(df[df["Churn Risk"] == "Medium"]))
-    col3.metric("Low Risk", len(df[df["Churn Risk"] == "Low"]))
+        if "Churn Risk" in df.columns:
+            col1, col2, col3 = st.columns(3)
+            col1.metric("High Risk", len(df[df["Churn Risk"] == "High"]))
+            col2.metric("Medium Risk", len(df[df["Churn Risk"] == "Medium"]))
+            col3.metric("Low Risk", len(df[df["Churn Risk"] == "Low"]))
 
-    st.subheader("Pending Review — High Risk")
-    st.dataframe(df[df["Churn Risk"] == "High"])
+            st.subheader("Pending Review — High Risk")
+            st.dataframe(df[df["Churn Risk"] == "High"])
 
-    st.subheader("All Customers")
-    st.dataframe(df)
+            st.subheader("All Customers")
+            st.dataframe(df)
 
-    st.bar_chart(df["Churn Risk"].value_counts())
+            st.bar_chart(df["Churn Risk"].value_counts())
 
-else: 
-    st.warning("Churn Risk Column not found in data")
-    st.dataframe(df)
+        else: 
+            st.warning("Churn Risk Column not found in data")
+            st.dataframe(df)
 
 except Exception as e:
     st.error(f"Could not connect to API: {e}")
