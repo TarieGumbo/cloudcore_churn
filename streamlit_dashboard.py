@@ -10,15 +10,18 @@ st.title("CloudCore — Customer Churn Risk")
 if st.button("Refresh"):
     st.rerun()
 
-data = requests.get(API_URL).json()
+try: 
+    data = requests.get(API_URL).json()
 # Handle both a list of records and a single dict
-if isinstance(data, dict):
-    data = [data]
-df = pd.DataFrame(data)
+if not data: 
+    st.info("No scored customers yet. Waiting for Zapier to send data")
+else: 
+    df = pd.DataFrame(data)
+    #show what columns exist 
+    st.write("Columns found:", df.columns.tolist())
+    st.write("Sample data:", df.head())
 
-if df.empty:
-    st.info("No scored customers yet.")
-else:
+if "Churn Risk" in df.columns:
     col1, col2, col3 = st.columns(3)
     col1.metric("High Risk", len(df[df["Churn Risk"] == "High"]))
     col2.metric("Medium Risk", len(df[df["Churn Risk"] == "Medium"]))
@@ -31,3 +34,10 @@ else:
     st.dataframe(df)
 
     st.bar_chart(df["Churn Risk"].value_counts())
+
+else: 
+    st.warning("Churn Risk Column not found in data")
+    st.dataframe(df)
+
+except Exception as e:
+    st.error(f"Could not connect to API: {e}")
