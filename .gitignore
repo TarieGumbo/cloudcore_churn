@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# CloudCore project-specific
+scored_output.csv
+*.xlsx
+*.xls
+*.csv
+
+# Environment variables (Zapier webhook URLs, API keys)
+.env
+secrets.py
+
+# Render deployment
+.render/
+
+# Streamlit
+.streamlit/
