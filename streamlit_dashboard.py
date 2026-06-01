@@ -367,11 +367,12 @@ try:
         """, unsafe_allow_html=True)
 
     with c4:
+        perth_time = (datetime.now(timezone.utc) + timedelta(hours=8)).strftime(''%d %b %Y · %I:%M %p')
         st.markdown(f"""
         <div class="metric-card total">
             <div class="metric-label">Total Customers</div>
             <div class="metric-value">{total}</div>
-            <div class="metric-sub">↻ Last updated: {datetime.now(timezone.utc) + timedelta(hours=8)).strftime('%d %b %Y · %I:%M:%S %p')} AWST</div>
+            <div class="metric-sub">↻ Last updated: {perth_time} AWST</div>
         </div>
         """, unsafe_allow_html=True)
 
