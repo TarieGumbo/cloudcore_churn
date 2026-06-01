@@ -32,18 +32,18 @@ html, body, [class*="css"] {
 .dash-header {
     background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%);
     border-bottom: 1px solid #2a2f3e;
-    padding: 1.5rem 2rem;
+    padding: 2.5rem 2rem;
     margin: -1rem -1rem 2rem -1rem;
 }
 .dash-title {
-    font-size: 1.8rem;
+    font-size: 2.8rem;
     font-weight: 700;
     color: #ffffff;
     letter-spacing: -0.5px;
     margin: 0;
 }
 .dash-subtitle {
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: #6b7280;
     margin: 0.2rem 0 0 0;
     font-family: 'DM Mono', monospace;
