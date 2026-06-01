@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -371,7 +371,7 @@ try:
         <div class="metric-card total">
             <div class="metric-label">Total Customers</div>
             <div class="metric-value">{total}</div>
-            <div class="metric-sub">↻ Last updated: {datetime.now().strftime('%H:%M:%S')}</div>
+            <div class="metric-sub">↻ Last updated: {datetime.now(timezone.utc) + timedelta(hours=8)).strftime('%d %b %Y · %I:%M:%S %p')} AWST</div>
         </div>
         """, unsafe_allow_html=True)
 
