@@ -15,7 +15,7 @@ def score_customer(row: dict) -> dict:
 def load_csv() -> pd.DataFrame: 
     if not os.path.exists(OUTPUT_FILE):
         return pd.DataFrame()
-    df = pd.read.csv(OUTPUT_FILE)
+    df = pd.read_csv(OUTPUT_FILE)
     return df if not df.empty else pd.DataFrame()
 
 def save_csv(df: pd.DataFrame):
@@ -40,13 +40,14 @@ def score():
 
     result = score_customer(data)
     
-# replace existing rows for this customer id 
+    # replace existing rows for this customer id 
+    
     df = load_csv()
     if not df.empty and "CustomerID" in df.columns:
         df = df[df["CustomerID"].astype(str)!=str(result["CustomerID"])]
     
      df = pd.concat([df, pd.DataFrame([result])], ignore_index=True)
-        save_csv(df)
+     save_csv(df)
  
     return jsonify(result), 200
  
