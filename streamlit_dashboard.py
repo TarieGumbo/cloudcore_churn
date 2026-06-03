@@ -707,7 +707,7 @@ def show_approve_modal(row: dict):
     with col2:
         st.markdown('<div class="escalate-btn">', unsafe_allow_html=True)
         if st.button("↑ Escalate to Manager", key=f"modal_escalate_{cid}", use_container_width=True):
-            st.error(f"↑ {cname} escalated to senior manager.")
+            st.error(f"↑ {cname} escalated to senior manager - COO .")
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     with col3:
