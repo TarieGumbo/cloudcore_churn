@@ -269,7 +269,17 @@ header {visibility: hidden;}
     margin-bottom: 14px;
 }
 
-/* ── Dialog / modal: dark background ──────────────────────────────────────── */
+/* ── Button column alignment — ensures all buttons sit at the same baseline ── */
+.btn-neutral button {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+/* Remove the top margin Streamlit adds when a column has no wrapper */
+div[data-testid="column"] > div:first-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
 div[data-testid="stDialog"] > div > div {
     background-color: #0f1117 !important;
     border: 1px solid #2a2f3e !important;
@@ -992,8 +1002,10 @@ try:
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 with btn_col3:
+                    st.markdown('<div class="btn-neutral">', unsafe_allow_html=True)
                     if st.button("→ View Details", key=f"details_{cid}"):
                         show_approve_modal(row.to_dict())
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Medium Risk Section ───────────────────────────────────────────────────
     medium_df = active_df[active_df["Churn Risk"] == "Medium"]
@@ -1042,8 +1054,10 @@ try:
                 btn_col1, btn_col2, _ = st.columns([1, 1, 5])
 
                 with btn_col1:
+                    st.markdown('<div class="btn-neutral">', unsafe_allow_html=True)
                     if st.button("→ Investigate", key=f"inv_{cid}"):
                         show_investigate_modal(row.to_dict())
+                    st.markdown('</div>', unsafe_allow_html=True)
 
                 with btn_col2:
                     st.markdown('<div class="approve-btn">', unsafe_allow_html=True)
