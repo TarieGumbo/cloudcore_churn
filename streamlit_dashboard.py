@@ -65,10 +65,12 @@ html, body, [class*="css"] {
     top: 0; left: 0; right: 0;
     height: 3px;
 }
-.metric-card.high::before { background: #ef4444; }
-.metric-card.medium::before { background: #f59e0b; }
-.metric-card.low::before { background: #10b981; }
-.metric-card.total::before { background: #3b82f6; }
+.metric-card.high::before     { background: #ef4444; }
+.metric-card.medium::before   { background: #f59e0b; }
+.metric-card.low::before      { background: #10b981; }
+.metric-card.total::before    { background: #3b82f6; }
+.metric-card.cleared::before  { background: #6b7280; }
+.metric-card.approved::before { background: #8b5cf6; }
 
 .metric-value {
     font-size: 2.5rem;
@@ -89,10 +91,12 @@ html, body, [class*="css"] {
     margin-top: 0.25rem;
     font-family: 'DM Mono', monospace;
 }
-.high .metric-value { color: #ef4444; }
-.medium .metric-value { color: #f59e0b; }
-.low .metric-value { color: #10b981; }
-.total .metric-value { color: #3b82f6; }
+.high     .metric-value { color: #ef4444; }
+.medium   .metric-value { color: #f59e0b; }
+.low      .metric-value { color: #10b981; }
+.total    .metric-value { color: #3b82f6; }
+.cleared  .metric-value { color: #6b7280; }
+.approved .metric-value { color: #8b5cf6; }
 
 /* Risk badges */
 .badge {
@@ -104,14 +108,36 @@ html, body, [class*="css"] {
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
-.badge-high { background: rgba(239,68,68,0.15); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
+.badge-high   { background: rgba(239,68,68,0.15);  color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
 .badge-medium { background: rgba(245,158,11,0.15); color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
-.badge-low { background: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+.badge-low    { background: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+.badge-cleared  { background: rgba(107,114,128,0.12); color: #4b5563; border: 1px solid rgba(107,114,128,0.3); }
+.badge-approved { background: rgba(139,92,246,0.12);  color: #7c3aed; border: 1px solid rgba(139,92,246,0.3); }
 
 /* Status badges */
-.status-pending { background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
-.status-review { background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
-.status-stable { background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+.status-pending  { background: rgba(239,68,68,0.1);    color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+.status-review   { background: rgba(245,158,11,0.1);   color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
+.status-stable   { background: rgba(16,185,129,0.1);   color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+.status-cleared  { background: rgba(107,114,128,0.08); color: #4b5563; border: 1px solid rgba(107,114,128,0.2); }
+.status-approved { background: rgba(139,92,246,0.08);  color: #7c3aed; border: 1px solid rgba(139,92,246,0.2); }
+
+/* Alert rows — cleared and approved */
+.alert-cleared {
+    background: rgba(107,114,128,0.04);
+    border: 1px solid rgba(107,114,128,0.18);
+    border-left: 4px solid #9ca3af;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.alert-approved {
+    background: rgba(139,92,246,0.04);
+    border: 1px solid rgba(139,92,246,0.18);
+    border-left: 4px solid #8b5cf6;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.5rem;
+}
 
 /* Section headers */
 .section-header {
@@ -281,6 +307,18 @@ try:
 except Exception:
     API_URL = "https://cloudcore-churn.onrender.com/results"
 
+# ── Session state — manual overrides (persist across reruns this session) ─────
+# Each dict maps CustomerID → override action applied by a human reviewer.
+# "escalated" : Medium → treated as High (Pending Review)
+# "cleared"   : Medium → moved to Cleared
+# "approved"  : High   → moved to Approved
+if "escalated" not in st.session_state:
+    st.session_state["escalated"] = set()   # CustomerIDs escalated to High
+if "cleared" not in st.session_state:
+    st.session_state["cleared"] = {}        # CustomerID → row dict
+if "approved" not in st.session_state:
+    st.session_state["approved"] = {}       # CustomerID → row dict
+
 # ── Helper functions ──────────────────────────────────────────────────────────
 def get_status(risk):
     if risk == "High":   return "Pending Review"
@@ -447,13 +485,19 @@ def show_investigate_modal(row: dict):
     with col1:
         st.markdown('<div class="approve-btn">', unsafe_allow_html=True)
         if st.button("✓ Clear — No Action", key=f"modal_clear_{cid}", use_container_width=True):
-            st.success(f"✓ {cname} cleared — no action needed")
+            # Move to Cleared: remove from escalated if previously set, add to cleared
+            st.session_state["escalated"].discard(cid)
+            st.session_state["cleared"][cid] = row
+            st.session_state["approved"].pop(cid, None)
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="escalate-btn">', unsafe_allow_html=True)
         if st.button("↑ Escalate to High", key=f"modal_esc_{cid}", use_container_width=True):
-            st.error(f"↑ {cname} escalated to High risk queue")
+            # Move to Pending Review: add to escalated, remove from cleared/approved
+            st.session_state["escalated"].add(cid)
+            st.session_state["cleared"].pop(cid, None)
+            st.session_state["approved"].pop(cid, None)
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     with col3:
@@ -643,7 +687,10 @@ def show_approve_modal(row: dict):
     with col1:
         st.markdown('<div class="approve-btn">', unsafe_allow_html=True)
         if st.button("✓ Approve & Mark Reviewed", key=f"modal_approve_{cid}", use_container_width=True):
-            st.success(f"✓ {cname} marked as reviewed.")
+            # Move to Approved: remove from any other state buckets
+            st.session_state["approved"][cid] = row
+            st.session_state["cleared"].pop(cid, None)
+            st.session_state["escalated"].discard(cid)
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
@@ -707,21 +754,39 @@ try:
         ), axis=1
     )
 
-    # Apply filters
-    filtered_df = df.copy()
+    # ── Apply session state overrides ─────────────────────────────────────────
+    # Escalated: Medium customers promoted to High by reviewer
+    if st.session_state["escalated"]:
+        mask = df["CustomerID"].astype(str).isin(st.session_state["escalated"])
+        df.loc[mask, "Churn Risk"]    = "High"
+        df.loc[mask, "Review Status"] = "Pending Review"
+
+    # Cleared and Approved: remove from main df so they don't appear in
+    # their original sections — they render in dedicated sections below
+    override_ids = (
+        set(st.session_state["cleared"].keys()) |
+        set(st.session_state["approved"].keys())
+    )
+    active_df = df[~df["CustomerID"].astype(str).isin(override_ids)].copy()
+
+    # Apply filters (on active customers only)
+    filtered_df = active_df.copy()
     if risk_filter != "All":
         filtered_df = filtered_df[filtered_df["Churn Risk"] == risk_filter]
     if show_pending_only:
         filtered_df = filtered_df[filtered_df["Churn Risk"] == "High"]
 
-    # Counts
-    high_count = len(df[df["Churn Risk"] == "High"])
-    med_count  = len(df[df["Churn Risk"] == "Medium"])
-    low_count  = len(df[df["Churn Risk"] == "Low"])
-    total      = len(df)
+    # Counts reflect active (non-overridden) customers
+    high_count = len(active_df[active_df["Churn Risk"] == "High"])
+    med_count  = len(active_df[active_df["Churn Risk"] == "Medium"])
+    low_count  = len(active_df[active_df["Churn Risk"] == "Low"])
+    total      = len(df)  # total always shows full dataset size
 
     # ── KPI Cards ─────────────────────────────────────────────────────────────
-    c1, c2, c3, c4 = st.columns(4)
+    cleared_count  = len(st.session_state["cleared"])
+    approved_count = len(st.session_state["approved"])
+
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
 
     with c1:
         st.markdown(f"""
@@ -756,7 +821,25 @@ try:
         <div class="metric-card total">
             <div class="metric-label">Total Customers</div>
             <div class="metric-value">{total}</div>
-            <div class="metric-sub">↻ Last updated: {perth_time} AWST</div>
+            <div class="metric-sub">↻ {perth_time} AWST</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c5:
+        st.markdown(f"""
+        <div class="metric-card cleared">
+            <div class="metric-label">Cleared</div>
+            <div class="metric-value">{cleared_count}</div>
+            <div class="metric-sub">✕ No Action Needed</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c6:
+        st.markdown(f"""
+        <div class="metric-card approved">
+            <div class="metric-label">Approved</div>
+            <div class="metric-value">{approved_count}</div>
+            <div class="metric-sub">✓ Review Complete</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -851,7 +934,7 @@ try:
     st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 
     # ── Pending Review Section (High Risk) ────────────────────────────────────
-    pending_df = df[df["Churn Risk"] == "High"]
+    pending_df = active_df[active_df["Churn Risk"] == "High"]
 
     if not pending_df.empty:
         st.markdown(
@@ -887,7 +970,7 @@ try:
                         <span class="info-chip">🔥 Risk Score: {score}/100</span>
                     </div>
                     <div style="margin-top:0.75rem;">
-                        <div style="background:#2a2f3e; border-radius:4px; height:6px; overflow:hidden;">
+                        <div style="background:#e5e7eb; border-radius:4px; height:6px; overflow:hidden;">
                             <div style="background: linear-gradient(90deg, #ef4444, #dc2626); width:{score}%; height:100%; border-radius:4px;"></div>
                         </div>
                     </div>
@@ -898,7 +981,6 @@ try:
 
                 with btn_col1:
                     st.markdown('<div class="approve-btn">', unsafe_allow_html=True)
-                    # ✅ APPROVE → opens score breakdown modal
                     if st.button("✓ Approve", key=f"approve_{cid}"):
                         show_approve_modal(row.to_dict())
                     st.markdown('</div>', unsafe_allow_html=True)
@@ -910,12 +992,11 @@ try:
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 with btn_col3:
-                    # → View Details also opens score breakdown
                     if st.button("→ View Details", key=f"details_{cid}"):
                         show_approve_modal(row.to_dict())
 
     # ── Medium Risk Section ───────────────────────────────────────────────────
-    medium_df = df[df["Churn Risk"] == "Medium"]
+    medium_df = active_df[active_df["Churn Risk"] == "Medium"]
 
     if not medium_df.empty:
         st.markdown(
@@ -951,7 +1032,7 @@ try:
                         <span class="info-chip">⚡ Risk Score: {score}/100</span>
                     </div>
                     <div style="margin-top:0.75rem;">
-                        <div style="background:#2a2f3e; border-radius:4px; height:6px; overflow:hidden;">
+                        <div style="background:#e5e7eb; border-radius:4px; height:6px; overflow:hidden;">
                             <div style="background: linear-gradient(90deg, #f59e0b, #d97706); width:{score}%; height:100%; border-radius:4px;"></div>
                         </div>
                     </div>
@@ -961,14 +1042,103 @@ try:
                 btn_col1, btn_col2, _ = st.columns([1, 1, 5])
 
                 with btn_col1:
-                    # 🔍 INVESTIGATE → opens activity log timeline modal
                     if st.button("→ Investigate", key=f"inv_{cid}"):
                         show_investigate_modal(row.to_dict())
 
                 with btn_col2:
                     st.markdown('<div class="approve-btn">', unsafe_allow_html=True)
+                    # Direct clear without modal — moves immediately to Cleared section
                     if st.button("✓ Clear", key=f"clear_{cid}"):
-                        st.success(f"✓ {cname} cleared — no action needed")
+                        st.session_state["cleared"][cid] = row.to_dict()
+                        st.session_state["escalated"].discard(cid)
+                        st.session_state["approved"].pop(cid, None)
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Cleared Section ───────────────────────────────────────────────────────
+    if st.session_state["cleared"]:
+        st.markdown(
+            f'<div class="section-header">✕ Cleared — {len(st.session_state["cleared"])} Account{"s" if len(st.session_state["cleared"]) > 1 else ""} — No Action Needed</div>',
+            unsafe_allow_html=True
+        )
+        for cid, row in st.session_state["cleared"].items():
+            cname   = row.get("Customer Name", row.get("CustomerID", "Unknown"))
+            usage   = float(row.get("Usage Drop", 0))
+            tickets = int(row.get("Number of Support Tickets", 0))
+            payment = str(row.get("Payment Delay", "No"))
+            score   = row.get("Risk Score", 0)
+            orig_risk = row.get("Churn Risk", "Medium")
+
+            with st.container():
+                st.markdown(f"""
+                <div class="alert-cleared">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <div>
+                            <span class="customer-id">{cid}</span>
+                            <span style="font-weight:600; color:#6b7280; margin-left:0.75rem; text-decoration:line-through;">{cname}</span>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <span class="badge badge-cleared">✕ Cleared</span>
+                            <span class="badge status-cleared">Was {orig_risk} Risk</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:1.5rem; margin-top:0.5rem; flex-wrap:wrap; opacity:0.6;">
+                        <span class="info-chip">📉 {usage:.0%}</span>
+                        <span class="info-chip">🎫 {tickets} tickets</span>
+                        <span class="info-chip">💳 {payment}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                b1, b2, _ = st.columns([1, 1, 5])
+                with b1:
+                    st.markdown('<div class="escalate-btn">', unsafe_allow_html=True)
+                    if st.button("↺ Reopen", key=f"reopen_cleared_{cid}"):
+                        st.session_state["cleared"].pop(cid, None)
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Approved Section ──────────────────────────────────────────────────────
+    if st.session_state["approved"]:
+        st.markdown(
+            f'<div class="section-header">✓ Approved — {len(st.session_state["approved"])} Account{"s" if len(st.session_state["approved"]) > 1 else ""} — Review Complete</div>',
+            unsafe_allow_html=True
+        )
+        for cid, row in st.session_state["approved"].items():
+            cname   = row.get("Customer Name", row.get("CustomerID", "Unknown"))
+            usage   = float(row.get("Usage Drop", 0))
+            tickets = int(row.get("Number of Support Tickets", 0))
+            payment = str(row.get("Payment Delay", "No"))
+            score   = row.get("Risk Score", 0)
+
+            with st.container():
+                st.markdown(f"""
+                <div class="alert-approved">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <div>
+                            <span class="customer-id">{cid}</span>
+                            <span style="font-weight:600; color:#7c3aed; margin-left:0.75rem;">{cname}</span>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <span class="badge badge-approved">✓ Approved</span>
+                            <span class="badge status-approved">Review Complete</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:1.5rem; margin-top:0.5rem; flex-wrap:wrap; opacity:0.7;">
+                        <span class="info-chip">📉 {usage:.0%}</span>
+                        <span class="info-chip">🎫 {tickets} tickets</span>
+                        <span class="info-chip">💳 {payment}</span>
+                        <span class="info-chip">🔥 {score}/100</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                b1, _ = st.columns([1, 6])
+                with b1:
+                    st.markdown('<div class="escalate-btn">', unsafe_allow_html=True)
+                    if st.button("↺ Reopen", key=f"reopen_approved_{cid}"):
+                        st.session_state["approved"].pop(cid, None)
+                        st.rerun()
                     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<hr class='divider'>", unsafe_allow_html=True)
@@ -1007,7 +1177,7 @@ try:
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown(f"""
     <div style="text-align:center; padding: 2rem 0 1rem 0; color: #9ca3af; font-size: 0.75rem; font-family: 'DM Mono', monospace;">
-        CloudCore Churn Risk Dashboard · ISYS6020 PoC · {total} customers scored
+        CloudCore Churn Risk Dashboard · ISYS6020 PoC · {total} customers scored · Human-in-the-loop enabled
     </div>
     """, unsafe_allow_html=True)
 
