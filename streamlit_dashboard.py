@@ -30,8 +30,9 @@ html, body, [class*="css"] {
 
 /* Header */
 .dash-header {
-    background: f8fafc;
-    border-bottom: 1px solid #2a2f3e;
+    background: #f8fafc;
+    border: 2px solid #d1d5db;
+    border-radius: 12px;
     padding: 2.5rem 2rem;
     margin: -1rem -1rem 2rem -1rem;
 }
@@ -43,7 +44,7 @@ html, body, [class*="css"] {
     margin: 0;
 }
 .dash-subtitle {
-    font-size: 1rem;
+    font-size: 1.15rem;
     color: #6b7280;
     margin: 0.2rem 0 0 0;
     font-family: 'DM Mono', monospace;
