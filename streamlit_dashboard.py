@@ -38,7 +38,7 @@ html, body, [class*="css"] {
 .dash-title {
     font-size: 2.8rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #e8eaf0;
     letter-spacing: -0.5px;
     margin: 0;
 }
