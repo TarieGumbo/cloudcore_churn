@@ -30,15 +30,15 @@ html, body, [class*="css"] {
 
 /* Header */
 .dash-header {
-    background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%);
+    background: f8fafc;
     border-bottom: 1px solid #2a2f3e;
     padding: 2.5rem 2rem;
     margin: -1rem -1rem 2rem -1rem;
 }
 .dash-title {
-    font-size: 2.8rem;
+    font-size: 3.8rem;
     font-weight: 700;
-    color: #e8eaf0;
+    color: #ffffff;
     letter-spacing: -0.5px;
     margin: 0;
 }
