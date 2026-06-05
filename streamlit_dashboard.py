@@ -945,7 +945,7 @@ try:
     st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 
     # ── Pending Review Section (High Risk) ────────────────────────────────────
-    pending_df = active_df[active_df["Churn Risk"] == "High"]
+    pending_df = filtered_df[filtered_df["Churn Risk"] == "High"]
 
     if not pending_df.empty:
         st.markdown(
@@ -1009,7 +1009,7 @@ try:
                     st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Medium Risk Section ───────────────────────────────────────────────────
-    medium_df = active_df[active_df["Churn Risk"] == "Medium"]
+    medium_df = filtered_df[filtered_df["Churn Risk"] == "Medium"]
 
     if not medium_df.empty:
         st.markdown(
