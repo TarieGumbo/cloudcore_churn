@@ -4,6 +4,8 @@ ISYS6020 AI in Business Strategy and Management — Semester 1 2026 . This proto
 Customers are scored Low, Medium, or High risk and surfaced to account managers via a Streamlit dashboard for human review before any retention action is taken.
 
 ## Tools 
-Zapier - automation / trigger (workflows)
+Google Sheets / App Scripts - automation / trigger (workflows)
+
 Streamlit - dashboard
+
 Flask - scoring 
